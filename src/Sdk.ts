@@ -6,10 +6,10 @@ export interface SdkEnvironmentConfig {
 }
 
 const SdkDefaultEnvironment = {
-  restUrl: 'https://rest-test.thestratos.org',
-  rpcUrl: 'https://rpc-test.thestratos.org',
-  chainId: 'test-chain-1',
-  explorerUrl: 'https://explorer-test.thestratos.org',
+  restUrl: "https://rest-test.thenexus.org",
+  rpcUrl: "https://rpc-test.thenexus.org",
+  chainId: "test-chain-1",
+  explorerUrl: "https://explorer-test.thenexus.org",
 };
 
 export default class Sdk {

@@ -1,19 +1,24 @@
-import { defaultRegistryTypes } from '@cosmjs/stargate';
-import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx';
-import _get from 'lodash/get';
-import { getAccountsData } from '../accounts';
-import { stratosDenom } from '../config/hdVault';
-import { baseGasAmount, decimalPrecision, perMsgGasAmount, standardFeeAmount } from '../config/tokens';
-import Sdk from '../Sdk';
-import { toWei } from '../services/bigNumber';
-import { getCosmos } from '../services/cosmos';
-import { getValidatorsBondedToDelegator } from '../validators';
-import * as Types from './types';
+import { defaultRegistryTypes } from "@cosmjs/stargate";
+import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
+import _get from "lodash/get";
+import { getAccountsData } from "../accounts";
+import { nexusDenom } from "../config/hdVault";
+import {
+  baseGasAmount,
+  decimalPrecision,
+  perMsgGasAmount,
+  standardFeeAmount,
+} from "../config/tokens";
+import Sdk from "../Sdk";
+import { toWei } from "../services/bigNumber";
+import { getCosmos } from "../services/cosmos";
+import { getValidatorsBondedToDelegator } from "../validators";
+import * as Types from "./types";
 
-import { GeneratedType } from '@cosmjs/proto-signing';
-import * as stratosTypes from '@stratos-network/stratos-cosmosjs-types';
+import { GeneratedType } from "@cosmjs/proto-signing";
+import * as nexusTypes from "@nexus-network/nexus-cosmosjs-types";
 
-import { DeliverTxResponse } from '@cosmjs/stargate';
+import { DeliverTxResponse } from "@cosmjs/stargate";
 
 function* payloadGenerator(dataList: Types.TxPayload[]) {
   while (dataList.length) {
@@ -21,9 +26,9 @@ function* payloadGenerator(dataList: Types.TxPayload[]) {
   }
 }
 
-export const getStratosTransactionRegistryTypes = () => {
-  const msgPrepayProto = stratosTypes.stratos.sds.v1.MsgPrepay;
-  const stratosTxRegistryTypes: ReadonlyArray<[string, GeneratedType]> = [
+export const getnexusTransactionRegistryTypes = () => {
+  const msgPrepayProto = nexusTypes.nexus.sds.v1.MsgPrepay;
+  const nexusTxRegistryTypes: ReadonlyArray<[string, GeneratedType]> = [
     ...defaultRegistryTypes,
     [Types.TxMsgTypes.SdsPrepay, msgPrepayProto],
 
@@ -36,24 +41,29 @@ export const getStratosTransactionRegistryTypes = () => {
     // [Types.TxMsgTypes.RegisterRemoveIndexingNode, Coin],
   ];
 
-  return stratosTxRegistryTypes;
+  return nexusTxRegistryTypes;
 };
 
-export const broadcast = async (signedTx: TxRaw): Promise<DeliverTxResponse> => {
+export const broadcast = async (
+  signedTx: TxRaw
+): Promise<DeliverTxResponse> => {
   try {
     const client = await getCosmos();
 
     const txBytes = TxRaw.encode(signedTx).finish();
     console.log(
-      '🚀 ~ file: transactions.ts ~ line 28 ~ broadcast ~ txBytes to be broadcasted',
-      JSON.stringify(txBytes),
+      "🚀 ~ file: transactions.ts ~ line 28 ~ broadcast ~ txBytes to be broadcasted",
+      JSON.stringify(txBytes)
     );
     const result = await client.broadcastTx(txBytes);
-    console.log('🚀 ~ file: transactions.ts ~ line 52 ~ broadcast ~ result', result);
+    console.log(
+      "🚀 ~ file: transactions.ts ~ line 52 ~ broadcast ~ result",
+      result
+    );
 
     return result;
   } catch (err) {
-    console.log('Could not broadcast', (err as Error).message);
+    console.log("Could not broadcast", (err as Error).message);
 
     throw err;
   }
@@ -62,8 +72,8 @@ export const broadcast = async (signedTx: TxRaw): Promise<DeliverTxResponse> => 
 export const sign = async (
   address: string,
   txMessages: Types.TxMessage[],
-  memo = '',
-  givenFee?: Types.TransactionFee,
+  memo = "",
+  givenFee?: Types.TransactionFee
 ): Promise<TxRaw> => {
   const fee = givenFee ? givenFee : getStandardFee();
 
@@ -75,16 +85,16 @@ export const sign = async (
 
 export const getStandardFee = (numberOfMessages = 1): Types.TransactionFee => {
   const fee = {
-    amount: [{ amount: String(standardFeeAmount), denom: stratosDenom }],
+    amount: [{ amount: String(standardFeeAmount), denom: nexusDenom }],
     gas: String(baseGasAmount + perMsgGasAmount * numberOfMessages),
   };
   return fee;
 };
 
 export const getStandardAmount = (amounts: number[]): Types.AmountType[] => {
-  const result = amounts.map(amount => ({
+  const result = amounts.map((amount) => ({
     amount: toWei(amount, decimalPrecision).toString(),
-    denom: stratosDenom,
+    denom: nexusDenom,
   }));
 
   return result;
@@ -93,8 +103,8 @@ export const getStandardAmount = (amounts: number[]): Types.AmountType[] => {
 // @depricated ?
 export const getBaseTx = async (
   keyPairAddress: string,
-  memo = '',
-  numberOfMessages = 1,
+  memo = "",
+  numberOfMessages = 1
 ): Promise<Types.BaseTransaction> => {
   const accountsData = await getAccountsData(keyPairAddress);
 
@@ -116,7 +126,7 @@ export const getBaseTx = async (
 
 export const getSendTx = async (
   keyPairAddress: string,
-  sendPayload: Types.SendTxPayload[],
+  sendPayload: Types.SendTxPayload[]
 ): Promise<Types.SendTxMessage[]> => {
   const payloadToProcess = payloadGenerator(sendPayload);
 
@@ -146,7 +156,7 @@ export const getSendTx = async (
 
 export const getDelegateTx = async (
   delegatorAddress: string,
-  delegatePayload: Types.DelegateTxPayload[],
+  delegatePayload: Types.DelegateTxPayload[]
 ): Promise<Types.DelegateTxMessage[]> => {
   const payloadToProcess = payloadGenerator(delegatePayload);
 
@@ -155,14 +165,15 @@ export const getDelegateTx = async (
   const messagesList: Types.DelegateTxMessage[] = [];
 
   while (iteratedData.value) {
-    const { amount, validatorAddress } = iteratedData.value as Types.DelegateTxPayload;
+    const { amount, validatorAddress } =
+      iteratedData.value as Types.DelegateTxPayload;
 
     const message = {
       typeUrl: Types.TxMsgTypes.Delegate,
       value: {
         amount: {
           amount: toWei(amount, decimalPrecision).toString(),
-          denom: stratosDenom,
+          denom: nexusDenom,
         },
         delegatorAddress: delegatorAddress,
         validatorAddress: validatorAddress,
@@ -179,7 +190,7 @@ export const getDelegateTx = async (
 
 export const getUnDelegateTx = async (
   delegatorAddress: string,
-  unDelegatePayload: Types.UnDelegateTxPayload[],
+  unDelegatePayload: Types.UnDelegateTxPayload[]
 ): Promise<Types.UnDelegateTxMessage[]> => {
   const payloadToProcess = payloadGenerator(unDelegatePayload);
 
@@ -188,14 +199,15 @@ export const getUnDelegateTx = async (
   const messagesList: Types.UnDelegateTxMessage[] = [];
 
   while (iteratedData.value) {
-    const { amount, validatorAddress } = iteratedData.value as Types.DelegateTxPayload;
+    const { amount, validatorAddress } =
+      iteratedData.value as Types.DelegateTxPayload;
 
     const message = {
       typeUrl: Types.TxMsgTypes.Undelegate,
       value: {
         amount: {
           amount: toWei(amount, decimalPrecision).toString(),
-          denom: stratosDenom,
+          denom: nexusDenom,
         },
         delegatorAddress: delegatorAddress,
         validatorAddress: validatorAddress,
@@ -212,7 +224,7 @@ export const getUnDelegateTx = async (
 
 export const getWithdrawalRewardTx = async (
   delegatorAddress: string,
-  withdrawalPayload: Types.WithdrawalRewardTxPayload[],
+  withdrawalPayload: Types.WithdrawalRewardTxPayload[]
 ): Promise<Types.WithdrawalRewardTxMessage[]> => {
   const payloadToProcess = payloadGenerator(withdrawalPayload);
 
@@ -221,7 +233,8 @@ export const getWithdrawalRewardTx = async (
   const messagesList: Types.WithdrawalRewardTxMessage[] = [];
 
   while (iteratedData.value) {
-    const { validatorAddress } = iteratedData.value as Types.WithdrawalRewardTxPayload;
+    const { validatorAddress } =
+      iteratedData.value as Types.WithdrawalRewardTxPayload;
 
     const message = {
       typeUrl: Types.TxMsgTypes.WithdrawRewards,
@@ -240,14 +253,16 @@ export const getWithdrawalRewardTx = async (
 };
 
 export const getWithdrawalAllRewardTx = async (
-  delegatorAddress: string,
+  delegatorAddress: string
 ): Promise<Types.WithdrawalRewardTxMessage[]> => {
   const vListResult = await getValidatorsBondedToDelegator(delegatorAddress);
 
   const { data: withdrawalPayload } = vListResult;
 
   const payloadToProcess = payloadGenerator(
-    withdrawalPayload.map((item: { address: string }) => ({ validatorAddress: item.address })),
+    withdrawalPayload.map((item: { address: string }) => ({
+      validatorAddress: item.address,
+    }))
   );
 
   let iteratedData = payloadToProcess.next();
@@ -255,7 +270,8 @@ export const getWithdrawalAllRewardTx = async (
   const messagesList: Types.WithdrawalRewardTxMessage[] = [];
 
   while (iteratedData.value) {
-    const { validatorAddress } = iteratedData.value as Types.WithdrawalRewardTxPayload;
+    const { validatorAddress } =
+      iteratedData.value as Types.WithdrawalRewardTxPayload;
 
     const message = {
       typeUrl: Types.TxMsgTypes.WithdrawRewards,
@@ -275,7 +291,7 @@ export const getWithdrawalAllRewardTx = async (
 
 export const getSdsPrepayTx = async (
   senderAddress: string,
-  prepayPayload: Types.SdsPrepayTxPayload[],
+  prepayPayload: Types.SdsPrepayTxPayload[]
 ): Promise<Types.SdsPrepayTxMessage[]> => {
   const payloadToProcess = payloadGenerator(prepayPayload);
 

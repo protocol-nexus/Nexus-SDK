@@ -1,36 +1,39 @@
-import dotenv from 'dotenv';
-import * as accounts from './accounts';
-import { mnemonic } from './hdVault';
-import { createMasterKeySeed, getSerializedWalletFromPhrase } from './hdVault/keyManager';
-import * as keyUtils from './hdVault/keyUtils';
-import { deriveKeyPair, deserializeEncryptedWallet } from './hdVault/wallet';
-import Sdk from './Sdk';
-import { getCosmos } from './services/cosmos';
-import * as Network from './services/network';
-import * as transactions from './transactions';
-import * as transactionTypes from './transactions/types';
-import * as validators from './validators';
+import dotenv from "dotenv";
+import * as accounts from "./accounts";
+import { mnemonic } from "./hdVault";
+import {
+  createMasterKeySeed,
+  getSerializedWalletFromPhrase,
+} from "./hdVault/keyManager";
+import * as keyUtils from "./hdVault/keyUtils";
+import { deriveKeyPair, deserializeEncryptedWallet } from "./hdVault/wallet";
+import Sdk from "./Sdk";
+import { getCosmos } from "./services/cosmos";
+import * as Network from "./services/network";
+import * as transactions from "./transactions";
+import * as transactionTypes from "./transactions/types";
+import * as validators from "./validators";
 
-import { SigningStargateClient } from '@cosmjs/stargate';
+import { SigningStargateClient } from "@cosmjs/stargate";
 
 dotenv.config();
 
-const password = 'XXXX';
+const password = "XXXX";
 
-const { ZERO_MNEMONIC: zeroUserMnemonic = '' } = process.env;
+const { ZERO_MNEMONIC: zeroUserMnemonic = "" } = process.env;
 
 const sdkEnvDev = {
-  restUrl: 'https://rest-dev.thestratos.org',
-  rpcUrl: 'https://rpc-dev.thestratos.org',
-  chainId: 'dev-chain-46',
-  explorerUrl: 'https://explorer-dev.thestratos.org',
+  restUrl: "https://rest-dev.thenexus.org",
+  rpcUrl: "https://rpc-dev.thenexus.org",
+  chainId: "dev-chain-46",
+  explorerUrl: "https://explorer-dev.thenexus.org",
 };
 
 const sdkEnvTest = {
-  restUrl: 'https://rest-test.thestratos.org',
-  rpcUrl: 'https://rpc-test.thestratos.org',
-  chainId: 'test-chain-1',
-  explorerUrl: 'https://explorer-test.thestratos.org',
+  restUrl: "https://rest-test.thenexus.org",
+  rpcUrl: "https://rpc-test.thenexus.org",
+  chainId: "test-chain-1",
+  explorerUrl: "https://explorer-test.thenexus.org",
 };
 
 // export type PathBuilder = (account_index: number) => HdPath;
@@ -44,10 +47,15 @@ const mainFour = async () => {
   const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   const masterKeySeed = await createMasterKeySeed(phrase, password);
 
-  const encryptedMasterKeySeedString = masterKeySeed.encryptedMasterKeySeed.toString();
+  const encryptedMasterKeySeedString =
+    masterKeySeed.encryptedMasterKeySeed.toString();
 
-  const keyPairZero = await deriveKeyPair(0, password, encryptedMasterKeySeedString);
-  console.log('keyPairZero', keyPairZero);
+  const keyPairZero = await deriveKeyPair(
+    0,
+    password,
+    encryptedMasterKeySeedString
+  );
+  console.log("keyPairZero", keyPairZero);
 
   // const keyPairOne = await deriveKeyPair(1, password, encryptedMasterKeySeedString);
   // console.log('keyPairOne', keyPairOne);
@@ -60,21 +68,34 @@ const mainSend = async () => {
   const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   const masterKeySeed = await createMasterKeySeed(phrase, password);
 
-  const encryptedMasterKeySeedString = masterKeySeed.encryptedMasterKeySeed.toString();
+  const encryptedMasterKeySeedString =
+    masterKeySeed.encryptedMasterKeySeed.toString();
 
-  const keyPairZero = await deriveKeyPair(0, password, encryptedMasterKeySeedString);
+  const keyPairZero = await deriveKeyPair(
+    0,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairZero) {
     return;
   }
 
-  const keyPairOne = await deriveKeyPair(1, password, encryptedMasterKeySeedString);
+  const keyPairOne = await deriveKeyPair(
+    1,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairOne) {
     return;
   }
 
-  const keyPairTwo = await deriveKeyPair(2, password, encryptedMasterKeySeedString);
+  const keyPairTwo = await deriveKeyPair(
+    2,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairTwo) {
     return;
@@ -96,30 +117,38 @@ const mainSend = async () => {
   if (signedTx) {
     try {
       const result = await transactions.broadcast(signedTx);
-      console.log('broadcasting result!', result);
+      console.log("broadcasting result!", result);
     } catch (error) {
       const err: Error = error as Error;
-      console.log('error broadcasting', err.message);
+      console.log("error broadcasting", err.message);
     }
   }
 };
 
 // cosmosjs delegate
 const mainDelegate = async () => {
-  const validatorAddress = 'stvaloper1hxrrqfpnddjcfk55tu5420rw8ta94032z3dm76';
+  const validatorAddress = "stvaloper1hxrrqfpnddjcfk55tu5420rw8ta94032z3dm76";
 
   const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   const masterKeySeed = await createMasterKeySeed(phrase, password);
 
-  const encryptedMasterKeySeedString = masterKeySeed.encryptedMasterKeySeed.toString();
-  const keyPairZero = await deriveKeyPair(0, password, encryptedMasterKeySeedString);
+  const encryptedMasterKeySeedString =
+    masterKeySeed.encryptedMasterKeySeed.toString();
+  const keyPairZero = await deriveKeyPair(
+    0,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairZero) {
     return;
   }
 
   const delegatorAddress = keyPairZero.address;
-  console.log('🚀 ~ file: run.ts ~ line 138 ~ mainDelegate ~ delegatorAddress', delegatorAddress);
+  console.log(
+    "🚀 ~ file: run.ts ~ line 138 ~ mainDelegate ~ delegatorAddress",
+    delegatorAddress
+  );
 
   const sendTxMessages = await transactions.getDelegateTx(delegatorAddress, [
     { amount: 1, validatorAddress },
@@ -132,23 +161,28 @@ const mainDelegate = async () => {
   if (signedTx) {
     try {
       const result = await transactions.broadcast(signedTx);
-      console.log('delegate broadcasting result!!! :)', result);
+      console.log("delegate broadcasting result!!! :)", result);
     } catch (error) {
       const err: Error = error as Error;
-      console.log('error broadcasting', err.message);
+      console.log("error broadcasting", err.message);
     }
   }
 };
 
 // cosmosjs undelegate
 const mainUndelegate = async () => {
-  const validatorAddress = 'stvaloper1hxrrqfpnddjcfk55tu5420rw8ta94032z3dm76';
+  const validatorAddress = "stvaloper1hxrrqfpnddjcfk55tu5420rw8ta94032z3dm76";
 
   const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   const masterKeySeed = await createMasterKeySeed(phrase, password);
 
-  const encryptedMasterKeySeedString = masterKeySeed.encryptedMasterKeySeed.toString();
-  const keyPairZero = await deriveKeyPair(0, password, encryptedMasterKeySeedString);
+  const encryptedMasterKeySeedString =
+    masterKeySeed.encryptedMasterKeySeed.toString();
+  const keyPairZero = await deriveKeyPair(
+    0,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairZero) {
     return;
@@ -167,23 +201,28 @@ const mainUndelegate = async () => {
   if (signedTx) {
     try {
       const result = await transactions.broadcast(signedTx);
-      console.log('undelegate result :)', result);
+      console.log("undelegate result :)", result);
     } catch (error) {
       const err: Error = error as Error;
-      console.log('error broadcasting', err.message);
+      console.log("error broadcasting", err.message);
     }
   }
 };
 
 // cosmosjs withdraw rewards
 const mainWithdrawRewards = async () => {
-  const validatorAddress = 'stvaloper1hxrrqfpnddjcfk55tu5420rw8ta94032z3dm76';
+  const validatorAddress = "stvaloper1hxrrqfpnddjcfk55tu5420rw8ta94032z3dm76";
 
   const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   const masterKeySeed = await createMasterKeySeed(phrase, password);
 
-  const encryptedMasterKeySeedString = masterKeySeed.encryptedMasterKeySeed.toString();
-  const keyPairZero = await deriveKeyPair(0, password, encryptedMasterKeySeedString);
+  const encryptedMasterKeySeedString =
+    masterKeySeed.encryptedMasterKeySeed.toString();
+  const keyPairZero = await deriveKeyPair(
+    0,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairZero) {
     return;
@@ -191,20 +230,20 @@ const mainWithdrawRewards = async () => {
 
   const delegatorAddress = keyPairZero.address;
 
-  const sendTxMessages = await transactions.getWithdrawalRewardTx(delegatorAddress, [
-    { validatorAddress },
-    { validatorAddress },
-  ]);
+  const sendTxMessages = await transactions.getWithdrawalRewardTx(
+    delegatorAddress,
+    [{ validatorAddress }, { validatorAddress }]
+  );
 
   const signedTx = await transactions.sign(delegatorAddress, sendTxMessages);
 
   if (signedTx) {
     try {
       const result = await transactions.broadcast(signedTx);
-      console.log('delegate withdrawal result :)', result);
+      console.log("delegate withdrawal result :)", result);
     } catch (error) {
       const err: Error = error as Error;
-      console.log('error broadcasting', err.message);
+      console.log("error broadcasting", err.message);
     }
   }
 };
@@ -214,26 +253,36 @@ const mainWithdrawAllRewards = async () => {
   const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   const masterKeySeed = await createMasterKeySeed(phrase, password);
 
-  const encryptedMasterKeySeedString = masterKeySeed.encryptedMasterKeySeed.toString();
-  const keyPairZero = await deriveKeyPair(0, password, encryptedMasterKeySeedString);
+  const encryptedMasterKeySeedString =
+    masterKeySeed.encryptedMasterKeySeed.toString();
+  const keyPairZero = await deriveKeyPair(
+    0,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairZero) {
     return;
   }
 
   const delegatorAddress = keyPairZero.address;
-  console.log('🚀 ~ file: run.ts ~ line 295 ~ mainWithdrawAllRewards ~ delegatorAddress', delegatorAddress);
+  console.log(
+    "🚀 ~ file: run.ts ~ line 295 ~ mainWithdrawAllRewards ~ delegatorAddress",
+    delegatorAddress
+  );
 
-  const sendTxMessage = await transactions.getWithdrawalAllRewardTx(delegatorAddress);
+  const sendTxMessage = await transactions.getWithdrawalAllRewardTx(
+    delegatorAddress
+  );
   const signedTx = await transactions.sign(delegatorAddress, sendTxMessage);
 
   if (signedTx) {
     try {
       const result = await transactions.broadcast(signedTx);
-      console.log('delegate withdrawal all result :)', result);
+      console.log("delegate withdrawal all result :)", result);
     } catch (error) {
       const err: Error = error as Error;
-      console.log('error broadcasting', err.message);
+      console.log("error broadcasting", err.message);
     }
   }
 };
@@ -243,167 +292,217 @@ const mainSdsPrepay = async () => {
   const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   const masterKeySeed = await createMasterKeySeed(phrase, password);
 
-  const encryptedMasterKeySeedString = masterKeySeed.encryptedMasterKeySeed.toString();
-  const keyPairZero = await deriveKeyPair(0, password, encryptedMasterKeySeedString);
+  const encryptedMasterKeySeedString =
+    masterKeySeed.encryptedMasterKeySeed.toString();
+  const keyPairZero = await deriveKeyPair(
+    0,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairZero) {
     return;
   }
 
-  const sendTxMessages = await transactions.getSdsPrepayTx(keyPairZero.address, [{ amount: 3 }]);
+  const sendTxMessages = await transactions.getSdsPrepayTx(
+    keyPairZero.address,
+    [{ amount: 3 }]
+  );
 
   const signedTx = await transactions.sign(keyPairZero.address, sendTxMessages);
 
   if (signedTx) {
     try {
       const result = await transactions.broadcast(signedTx);
-      console.log('broadcast prepay result', result);
+      console.log("broadcast prepay result", result);
     } catch (err) {
-      console.log('error broadcasting', (err as Error).message);
+      console.log("error broadcasting", (err as Error).message);
     }
   }
 };
 
 const getAccountTrasactions = async () => {
-  const zeroAddress = 'st1k4ach36c8qwuckefz94vy83y308h5uzyrsllx6';
+  const zeroAddress = "st1k4ach36c8qwuckefz94vy83y308h5uzyrsllx6";
 
-  const r = await accounts.getAccountTrasactions(zeroAddress, transactionTypes.HistoryTxType.All, 1);
+  const r = await accounts.getAccountTrasactions(
+    zeroAddress,
+    transactionTypes.HistoryTxType.All,
+    1
+  );
 
-  console.log('r!!', r.data);
-  console.log('r!!', r.data[1]);
+  console.log("r!!", r.data);
+  console.log("r!!", r.data[1]);
 };
 
 const getValidators = async () => {
   const vData = await validators.getValidators();
-  console.log('vData');
+  console.log("vData");
 };
 
 const mainBalance = async () => {
   const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   const masterKeySeed = await createMasterKeySeed(phrase, password);
 
-  const encryptedMasterKeySeedString = masterKeySeed.encryptedMasterKeySeed.toString();
-  const keyPairZero = await deriveKeyPair(0, password, encryptedMasterKeySeedString);
+  const encryptedMasterKeySeedString =
+    masterKeySeed.encryptedMasterKeySeed.toString();
+  const keyPairZero = await deriveKeyPair(
+    0,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairZero) {
     return;
   }
 
-  const keyPairOne = await deriveKeyPair(1, password, encryptedMasterKeySeedString);
+  const keyPairOne = await deriveKeyPair(
+    1,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairOne) {
     return;
   }
 
-  const keyPairTwo = await deriveKeyPair(2, password, encryptedMasterKeySeedString);
+  const keyPairTwo = await deriveKeyPair(
+    2,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairTwo) {
     return;
   }
 
-  console.log('keyPairZero', keyPairZero.address);
-  console.log('keyPairOne', keyPairOne.address);
-  console.log('keyPairTwo', keyPairTwo.address);
+  console.log("keyPairZero", keyPairZero.address);
+  console.log("keyPairOne", keyPairOne.address);
+  console.log("keyPairTwo", keyPairTwo.address);
 
-  const b0 = await accounts.getBalance(keyPairZero.address, 'ustos');
-  const b1 = await accounts.getBalance(keyPairOne.address, 'ustos');
-  const b2 = await accounts.getBalance(keyPairTwo.address, 'ustos');
+  const b0 = await accounts.getBalance(keyPairZero.address, "ustos");
+  const b1 = await accounts.getBalance(keyPairOne.address, "ustos");
+  const b2 = await accounts.getBalance(keyPairTwo.address, "ustos");
 
-  console.log('our bal keyPairZero', b0);
-  console.log('our bal keyPairOne', b1);
-  console.log('our bal keyPairTwo', b2);
+  console.log("our bal keyPairZero", b0);
+  console.log("our bal keyPairOne", b1);
+  console.log("our bal keyPairTwo", b2);
 };
 
 const getAvailableBalance = async () => {
   const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   const masterKeySeed = await createMasterKeySeed(phrase, password);
 
-  const encryptedMasterKeySeedString = masterKeySeed.encryptedMasterKeySeed.toString();
-  const keyPairZero = await deriveKeyPair(0, password, encryptedMasterKeySeedString);
+  const encryptedMasterKeySeedString =
+    masterKeySeed.encryptedMasterKeySeed.toString();
+  const keyPairZero = await deriveKeyPair(
+    0,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairZero) {
     return;
   }
 
-  console.log('keyPairZero', keyPairZero.address);
+  console.log("keyPairZero", keyPairZero.address);
 
-  const address = 'st1k4ach36c8qwuckefz94vy83y308h5uzyrsllx6';
+  const address = "st1k4ach36c8qwuckefz94vy83y308h5uzyrsllx6";
   const bResult = await Network.getAvailableBalance(address);
 
   const { response } = bResult;
 
-  console.log('our available balanace', response?.result);
+  console.log("our available balanace", response?.result);
 };
 
 const getDelegatedBalance = async () => {
   const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   const masterKeySeed = await createMasterKeySeed(phrase, password);
 
-  const encryptedMasterKeySeedString = masterKeySeed.encryptedMasterKeySeed.toString();
-  const keyPairZero = await deriveKeyPair(0, password, encryptedMasterKeySeedString);
+  const encryptedMasterKeySeedString =
+    masterKeySeed.encryptedMasterKeySeed.toString();
+  const keyPairZero = await deriveKeyPair(
+    0,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairZero) {
     return;
   }
 
-  console.log('keyPairZero', keyPairZero.address);
+  console.log("keyPairZero", keyPairZero.address);
 
-  const address = 'st1k4ach36c8qwuckefz94vy83y308h5uzyrsllx6';
+  const address = "st1k4ach36c8qwuckefz94vy83y308h5uzyrsllx6";
   const bResult = await Network.getDelegatedBalance(address);
 
   const { response } = bResult;
 
-  console.log('our delegated balanace', response?.result[0].balance);
+  console.log("our delegated balanace", response?.result[0].balance);
 };
 
 const getUnboundingBalance = async () => {
   const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   const masterKeySeed = await createMasterKeySeed(phrase, password);
 
-  const encryptedMasterKeySeedString = masterKeySeed.encryptedMasterKeySeed.toString();
-  const keyPairZero = await deriveKeyPair(0, password, encryptedMasterKeySeedString);
+  const encryptedMasterKeySeedString =
+    masterKeySeed.encryptedMasterKeySeed.toString();
+  const keyPairZero = await deriveKeyPair(
+    0,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairZero) {
     return;
   }
 
-  console.log('keyPairZero', keyPairZero.address);
+  console.log("keyPairZero", keyPairZero.address);
 
-  const address = 'st1k4ach36c8qwuckefz94vy83y308h5uzyrsllx6';
+  const address = "st1k4ach36c8qwuckefz94vy83y308h5uzyrsllx6";
   const bResult = await Network.getUnboundingBalance(address);
 
   const { response } = bResult;
 
-  console.log('our unbounding balanace', response?.result); // an array ?
+  console.log("our unbounding balanace", response?.result); // an array ?
 };
 
 const getRewardBalance = async () => {
   const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   const masterKeySeed = await createMasterKeySeed(phrase, password);
 
-  const encryptedMasterKeySeedString = masterKeySeed.encryptedMasterKeySeed.toString();
-  const keyPairZero = await deriveKeyPair(0, password, encryptedMasterKeySeedString);
+  const encryptedMasterKeySeedString =
+    masterKeySeed.encryptedMasterKeySeed.toString();
+  const keyPairZero = await deriveKeyPair(
+    0,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairZero) {
     return;
   }
 
-  console.log('keyPairZero', keyPairZero.address);
+  console.log("keyPairZero", keyPairZero.address);
 
-  const address = 'st1k4ach36c8qwuckefz94vy83y308h5uzyrsllx6';
+  const address = "st1k4ach36c8qwuckefz94vy83y308h5uzyrsllx6";
   const bResult = await Network.getRewardBalance(address);
 
   const { response } = bResult;
 
-  console.log('our reward balanace', response?.result.rewards); // an array ?
+  console.log("our reward balanace", response?.result.rewards); // an array ?
 };
 
 const getBalanceCardMetrics = async () => {
   const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   const masterKeySeed = await createMasterKeySeed(phrase, password);
 
-  const encryptedMasterKeySeedString = masterKeySeed.encryptedMasterKeySeed.toString();
-  const keyPairZero = await deriveKeyPair(2, password, encryptedMasterKeySeedString);
+  const encryptedMasterKeySeedString =
+    masterKeySeed.encryptedMasterKeySeed.toString();
+  const keyPairZero = await deriveKeyPair(
+    2,
+    password,
+    encryptedMasterKeySeedString
+  );
 
   if (!keyPairZero) {
     return;
@@ -415,53 +514,59 @@ const getBalanceCardMetrics = async () => {
   // const delegatorAddress = wen;
   const b = await accounts.getBalanceCardMetrics(delegatorAddress);
 
-  console.log('balanace card metrics ', b);
+  console.log("balanace card metrics ", b);
 };
 
 const formatBalanceFromWei = () => {
-  const amount = '50000';
+  const amount = "50000";
   const balanceOne = accounts.formatBalanceFromWei(amount, 4);
-  console.log('🚀 ~ file: run.ts ~ line 464 ~ formatBalanceFromWei ~ balanceOne', balanceOne);
+  console.log(
+    "🚀 ~ file: run.ts ~ line 464 ~ formatBalanceFromWei ~ balanceOne",
+    balanceOne
+  );
   const balanceTwo = accounts.formatBalanceFromWei(amount, 5, true);
-  console.log('🚀 ~ file: run.ts ~ line 466 ~ formatBalanceFromWei ~ balanceTwo', balanceTwo);
+  console.log(
+    "🚀 ~ file: run.ts ~ line 466 ~ formatBalanceFromWei ~ balanceTwo",
+    balanceTwo
+  );
 };
 
 const getStandardFee = () => {
   const fee = transactions.getStandardFee(3);
   const sendTx = transactions.getSendTx;
 
-  console.log('fee', fee);
+  console.log("fee", fee);
 };
 
 const runFaucet = async () => {
-  const walletAddress = 'st1k4ach36c8qwuckefz94vy83y308h5uzyrsllx6';
-  const faucetUrl = 'https://faucet-test.thestratos.org/faucet';
+  const walletAddress = "st1k4ach36c8qwuckefz94vy83y308h5uzyrsllx6";
+  const faucetUrl = "https://faucet-test.thenexus.org/faucet";
 
   const result = await accounts.increaseBalance(walletAddress, faucetUrl);
-  console.log('faucet result', result);
+  console.log("faucet result", result);
 };
 
 const getChainId = async () => {
   const chain = await Network.getChainId();
 
-  console.log('status result!!', chain);
+  console.log("status result!!", chain);
 };
 
 const getTxHistoryN = async () => {
-  const zeroAddress = 'st1trlky7dx25er4p85waycqel6lxjnl0qunc7hpt';
+  const zeroAddress = "st1trlky7dx25er4p85waycqel6lxjnl0qunc7hpt";
 
   const type = transactionTypes.HistoryTxType.Delegate;
-  const txType = transactionTypes.BlockChainTxMsgTypesMap.get(type) || '';
-  console.log('🚀 ~ file: run.ts ~ line 558 ~ getTxHistory ~ txType !', txType);
+  const txType = transactionTypes.BlockChainTxMsgTypesMap.get(type) || "";
+  console.log("🚀 ~ file: run.ts ~ line 558 ~ getTxHistory ~ txType !", txType);
 
-  const result = await Network.getTxListBlockchain(zeroAddress, '', 1);
+  const result = await Network.getTxListBlockchain(zeroAddress, "", 1);
 
-  console.log('status result!!', result);
+  console.log("status result!!", result);
 
   const { response } = result;
 
   if (!response) {
-    return 'aaa!!!';
+    return "aaa!!!";
   }
   const { txs } = response;
 
@@ -473,7 +578,7 @@ const getTxHistoryN = async () => {
 const getTxHistory = async () => {
   const wallet = await keyUtils.createWalletAtPath(0, zeroUserMnemonic);
 
-  console.log('running getTxHistory');
+  console.log("running getTxHistory");
   const [firstAccount] = await wallet.getAccounts();
 
   const zeroAddress = firstAccount.address;
@@ -481,10 +586,10 @@ const getTxHistory = async () => {
   const result = await accounts.getAccountTrasactions(
     zeroAddress,
     transactionTypes.HistoryTxType.Transfer,
-    1,
+    1
   );
 
-  console.log('hist result!! !', result);
+  console.log("hist result!! !", result);
 
   return true;
 };
@@ -546,14 +651,20 @@ const cosmosWalletCreateTest = async () => {
   // console.log('🚀 ~ file: run.ts ~ line 546 ~ cosmosWalletCreateTest ~ serializedOne', serializedOne);
 
   const [firstAccount] = await wallet.getAccounts();
-  console.log('🚀 ~ file: run.ts ~ line 632 ~ cosmosWalletCreateTest ~ firstAccount', firstAccount);
+  console.log(
+    "🚀 ~ file: run.ts ~ line 632 ~ cosmosWalletCreateTest ~ firstAccount",
+    firstAccount
+  );
   // const [firstAccountOne] = await walletOne.getAccounts();
   // console.log('🚀 ~ file: run.ts ~ line 548 ~ cosmosWalletCreateTest ~ firstAccountOne', firstAccountOne);
 
-  const deserializedWallet = await deserializeEncryptedWallet(serialized, password);
+  const deserializedWallet = await deserializeEncryptedWallet(
+    serialized,
+    password
+  );
   console.log(
-    '🚀 ~ file: run.ts ~ line 554 ~ cosmosWalletCreateTest ~ deserializedWallet',
-    JSON.stringify(await deserializedWallet.getAccounts(), null, 2),
+    "🚀 ~ file: run.ts ~ line 554 ~ cosmosWalletCreateTest ~ deserializedWallet",
+    JSON.stringify(await deserializedWallet.getAccounts(), null, 2)
   );
   // const deserializedWalletOne = await deserializeEncryptedWallet(serializedOne, password);
   // console.log(
@@ -604,8 +715,10 @@ const testAccountData = async () => {
   // console.log('st1k4ach36c8qwuckefz94vy83y308h5uzyrsllx6');
   // console.log('vData', vData);
 
-  const vInfo = await Network.getValidator('stvaloper1evqx4vnc0jhkgd4f5kruz7vuwt6lse3zfkex5u');
-  console.log('🚀 ~ file: run.ts ~ line 629 ~ testAccountData ~ vInfo', vInfo);
+  const vInfo = await Network.getValidator(
+    "stvaloper1evqx4vnc0jhkgd4f5kruz7vuwt6lse3zfkex5u"
+  );
+  console.log("🚀 ~ file: run.ts ~ line 629 ~ testAccountData ~ vInfo", vInfo);
 
   // const accountsData2 = await accounts.getAccountsData(firstAccount.address);
   // console.log('🚀 ~ file: run.ts ~ line 598 ~ testAccountData ~ accountsData2', accountsData2);
@@ -622,12 +735,12 @@ const main = async () => {
   try {
     resolvedChainID = await Network.getChainId();
   } catch (error) {
-    console.log('🚀 ~ file: 494 ~ init ~ resolvedChainID error', error);
-    throw new Error('Could not resolve chain id');
+    console.log("🚀 ~ file: 494 ~ init ~ resolvedChainID error", error);
+    throw new Error("Could not resolve chain id");
   }
 
   if (!resolvedChainID) {
-    throw new Error('Chain id is empty. Exiting');
+    throw new Error("Chain id is empty. Exiting");
   }
 
   await Sdk.init({ ...sdkEnv, chainId: resolvedChainID });
@@ -635,7 +748,10 @@ const main = async () => {
   // const phrase = mnemonic.convertStringToArray(zeroUserMnemonic);
   // const masterKeySeedInfo = await createMasterKeySeed(phrase, password);
   // const serialized = masterKeySeedInfo.encryptedWalletInfo;
-  const serialized = await getSerializedWalletFromPhrase(zeroUserMnemonic, password);
+  const serialized = await getSerializedWalletFromPhrase(
+    zeroUserMnemonic,
+    password
+  );
 
   // we have to initialize a client prior to use cosmos
   const _cosmosClient = await getCosmos(serialized, password);

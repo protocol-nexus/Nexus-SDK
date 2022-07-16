@@ -1,9 +1,9 @@
-import { DirectSecp256k1HdWallet, Registry } from '@cosmjs/proto-signing';
-import { SigningStargateClient } from '@cosmjs/stargate';
-import { AccountsData } from '../accounts/types';
-import { deserializeEncryptedWallet } from '../hdVault/wallet';
-import Sdk from '../Sdk';
-import { getStratosTransactionRegistryTypes } from '../transactions/transactions';
+import { DirectSecp256k1HdWallet, Registry } from "@cosmjs/proto-signing";
+import { SigningStargateClient } from "@cosmjs/stargate";
+import { AccountsData } from "../accounts/types";
+import { deserializeEncryptedWallet } from "../hdVault/wallet";
+import Sdk from "../Sdk";
+import { getnexusTransactionRegistryTypes } from "../transactions/transactions";
 // import { BroadcastResult, SignedTransaction, Transaction, TransactionMessage } from '../transactions/types';
 
 // @todo clean up this interface
@@ -18,42 +18,56 @@ export interface CosmosInstance {
   getAccounts(address: string): Promise<AccountsData>;
 }
 
-export class StratosCosmos {
+export class nexusCosmos {
   public static cosmosInstance: SigningStargateClient | null;
 
-  public static async init(serialized: string, password: string): Promise<void> {
+  public static async init(
+    serialized: string,
+    password: string
+  ): Promise<void> {
     if (!serialized) {
-      throw new Error('encripted wallet must be provided for the client initialization');
+      throw new Error(
+        "encripted wallet must be provided for the client initialization"
+      );
     }
 
     const { rpcUrl: rpcEndpoint } = Sdk.environment;
 
-    const deserializedWallet = await deserializeEncryptedWallet(serialized, password);
+    const deserializedWallet = await deserializeEncryptedWallet(
+      serialized,
+      password
+    );
 
     const client = await getCosmosClient(rpcEndpoint, deserializedWallet);
 
-    StratosCosmos.cosmosInstance = client;
+    nexusCosmos.cosmosInstance = client;
   }
 
   public static reset() {
-    StratosCosmos.cosmosInstance = null;
+    nexusCosmos.cosmosInstance = null;
   }
 }
 
 export const resetCosmos = () => {
-  StratosCosmos.reset();
+  nexusCosmos.reset();
 };
 
-export const getCosmos = async (serialized = '', password = ''): Promise<SigningStargateClient> => {
-  if (!StratosCosmos.cosmosInstance) {
-    await StratosCosmos.init(serialized, password);
+export const getCosmos = async (
+  serialized = "",
+  password = ""
+): Promise<SigningStargateClient> => {
+  if (!nexusCosmos.cosmosInstance) {
+    await nexusCosmos.init(serialized, password);
   }
 
-  return StratosCosmos.cosmosInstance!;
+  return nexusCosmos.cosmosInstance!;
 };
 
-const getCosmosClient = async (rpcEndpoint: string, deserializedWallet: DirectSecp256k1HdWallet) => {
-  const clientRegistryTypes = getStratosTransactionRegistryTypes();
+const getCosmosClient = async (
+  rpcEndpoint: string,
+  deserializedWallet: DirectSecp256k1HdWallet
+) => {
+  const clientRegistryTypes = getnexusTransactionRegistryTypes();
 
   const clientRegistry = new Registry(clientRegistryTypes);
 
@@ -61,7 +75,11 @@ const getCosmosClient = async (rpcEndpoint: string, deserializedWallet: DirectSe
     registry: clientRegistry,
   };
 
-  const client = await SigningStargateClient.connectWithSigner(rpcEndpoint, deserializedWallet, options);
+  const client = await SigningStargateClient.connectWithSigner(
+    rpcEndpoint,
+    deserializedWallet,
+    options
+  );
 
   return client;
 };
