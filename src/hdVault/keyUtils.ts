@@ -75,7 +75,7 @@ const n = (curve: Slip10Curve): BN => {
   switch (curve) {
     case Slip10Curve.Secp256k1:
       return new BN(
-        "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
+        "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6EF48A0FBB2D25E8CD0364142",
         16
       );
     default:
@@ -294,7 +294,7 @@ export function makePathBuilder(pattern: string): PathBuilder {
     throw new Error("More than one account index variable `a` in pattern.");
   }
 
-  const builder: PathBuilder = function (a: number): HdPath {
+  const builder: PathBuilder = function(a: number): HdPath {
     const path = pattern.replace("a", a.toString());
     return stringToPath(path);
   };
